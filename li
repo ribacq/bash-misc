@@ -1,12 +1,81 @@
 #!/bin/bash
 #li : quick CLI ckecklists management tool
 
+manual="\
+li : gestionnaire rapide de listes en console
+*********************************************
+
+Commandes générales
+-------------------
+li -h / --help        Afficher ce message d'aide
+li -m / --move        Changer de dossier
+
+Gestion des listes
+------------------
+li                    Afficher les noms, titres et longueurs de toutes les listes existantes
+li -a                 Afficher toutes les listes, en incluant les listes chiffrées
+li + nom [titre]      Créer une liste. Le nom respecte l'expression régulière '^[a-zA-Z_][a-zA-Z0-9_-]*$' et sert de raccourcis
+                      tandis que le titre peut comporter espaces et caractères spéciaux et accentués.
+li - nom              Supprimer la liste 'nom'
+li nom t              Éditer le titre de la liste 'nom'
+li -e nom             Éditer la liste 'nom' dans l’éditeur standard
+li -s nom             Trier la liste 'nom' par ordre alphabétique
+li -c nom             Chiffrer la liste 'nom' grâce à l’algorithme DES-3
+li -d nom             Déchiffrer la liste 'nom' grâce à l’algorithme DES-3
+
+Gestion des tâches
+------------------
+li nom                Afficher la liste 'nom'
+li nom +tâche         Ajouter une tâche à la liste 'nom'
+li nom -n             Supprimer la tâche au numéro 'n' de la liste 'nom'
+li nom vn             Changer le statut de validation de la tâche au numéro 'n' de la liste 'nom'
+li nom en             Éditer le texte attribué de la tâche au numéro 'n' de la liste 'nom'
+li nom n -[x]         Remonter la tâche au numéro 'n' dans la liste 'nom' d'un cran. Si le nombre x, est donné, la tâche est remontée de x crans.
+li nom n +[x]         Descend la tâche de la même manière.\
+"
+
+set_config(){
+	#Set configuration parameter $1 to value $2
+	if [ -z "$1" ] || [ -z "$2" ]
+	then
+		return 1
+	fi
+
+	if [ "$( grep -ce "^${1}='${2}'\$" "${config_file}" )" -eq 0 ]
+	then
+		echo "${1}='${2}'" >> "${config_file}"
+	else
+		sed -i "s/^${1}='.*'$/${1}='${2}'/" "${config_file}"
+	fi
+
+	return 0
+}
+
+default_config="cur_dir='.'"
+
 #variables
 prog_dir="${HOME}/.li"
 save_dir="${prog_dir}/data"
+config_file="${prog_dir}/config"
 
-cur_dir="$(jq '.cur_dir' "${prog_dir}/active.conf")"
-cur_dir="${cur_dir:1:-1}"
+#vérification de l’existence de ces fichiers et dossiers
+if [ ! -d "$prog_dir" ]
+then
+	mkdir "$prog_dir"
+fi
+if [ ! -d "$save_dir" ]
+then
+	mkdir "$save_dir"
+fi
+if [ ! -f "$config_file" ]
+then
+	echo "$default_config" > "$config_file"
+fi
+
+#chargement du fichier de configuration
+. $config_file
+
+#sélection du dossier
 used_dir="${save_dir}/${cur_dir}"
 
 #début du code
@@ -40,7 +109,7 @@ then
 elif [ "$1" == '-h' ] || [ "$1" == '--help' ]
 then
 	#aide
-	cat "${prog_dir}/manuel"
+	echo "${manual}"
 	exit 0
 #--
 elif [ "$1" == '-m' ] || [ "$1" == '--move' ]
@@ -50,8 +119,8 @@ then
 	echo 'Sélectionnez le nouveau dossier :'
 	select dir in '.' `find "${save_dir}" -type d -printf '%P\n'`
 	do break; done
+	set_config 'cur_dir' "${dir}"
 	echo "Vous avez choisi « $dir »."
-	echo `jq ".cur_dir=\"${dir}\"" "${prog_dir}/active.conf"` > "${prog_dir}/active.conf"
 	exit 0
 #--
 elif [ "$1" == '+' ]
@@ -327,3 +396,4 @@ else
 	echo "Erreur : Liste '$1' inexistante. Faites 'li -h' pour l'aide."
 	exit 1
 fi
+
