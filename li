@@ -1,0 +1,329 @@
+#!/bin/bash
+#li : quick CLI ckecklists management tool
+
+#variables
+prog_dir="${HOME}/.li"
+save_dir="${prog_dir}/data"
+
+cur_dir="$(jq '.cur_dir' "${prog_dir}/active.conf")"
+cur_dir="${cur_dir:1:-1}"
+used_dir="${save_dir}/${cur_dir}"
+
+#début du code
+if [ -z "$1" ] || [ "$1" == '-a' ]
+then
+	#pas d'arguments ou -a : affichage de la liste des listes
+	echo "=== Listes accessibles dans « ${cur_dir} »"
+	for nom in `ls -1 "$used_dir"`
+	do
+		if [ -f "${used_dir}/$nom" ]
+		then
+			titre="$(head -n 1 "${used_dir}/$nom")"
+			longueur="$(grep -cve '^\s*$' "${used_dir}/$nom")"
+			(( longueur-- ))
+			nb_validees="$(grep -ce '^~~' "${used_dir}/$nom")"
+			echo "${nom}	| ${nb_validees}/${longueur}	| ${titre}"
+		fi
+	done
+	if [ "$1" == '-a' ]
+	then
+		echo '=== Listes chiffrées'
+		for nom in `ls -1A "$used_dir" | grep -oe '^\..*'`
+		do
+			echo "${nom:1}	| #/#	| ******"
+		done
+	fi	
+	echo "=== ($[$(find "${used_dir}" -type d -print | wc -l)-1] sous-dossiers)"
+	find "${used_dir}" -type d -printf '%P\n'
+	exit 0
+#--
+elif [ "$1" == '-h' ] || [ "$1" == '--help' ]
+then
+	#aide
+	cat "${prog_dir}/manuel"
+	exit 0
+#--
+elif [ "$1" == '-m' ] || [ "$1" == '--move' ]
+then
+	#choix de dossier
+	echo "Le dossier actuel est : « ${cur_dir} »."
+	echo 'Sélectionnez le nouveau dossier :'
+	select dir in '.' `find "${save_dir}" -type d -printf '%P\n'`
+	do break; done
+	echo "Vous avez choisi « $dir »."
+	echo `jq ".cur_dir=\"${dir}\"" "${prog_dir}/active.conf"` > "${prog_dir}/active.conf"
+	exit 0
+#--
+elif [ "$1" == '+' ]
+then
+	#nouvelle liste
+	shift
+	if [ -n "$1" ] && [ `expr "$1" : '[a-zA-Z_][a-zA-Z0-9_-]*'` -eq "${#1}" ]
+	then
+		#le nom proposé est valide
+		nom="$1"
+		if [ ! -f "${used_dir}/$nom" ]
+		then
+			#Nouvelle liste
+			shift
+			titre="$@"
+			if [ -z "$titre" ]
+			then
+				titre="$nom"
+			fi
+			echo 'Nouvelle liste'
+			echo "nom   : '$nom'"
+			echo "titre : '$titre'"
+			echo "$titre" > "${used_dir}/$nom"
+		else
+			#liste déjà existante
+			echo "Erreur : le nom proposé est déjà attribué à une liste."
+		fi
+	else
+		#mauvais nom
+		echo "Erreur : le nom proposé est invalide. Impossible de créer la liste. Faites 'li -h' pour l'aide."
+	fi
+#--
+elif [ "$1" == '-' ]
+then
+	#suppression d'une liste
+	shift
+	if [ -f "${used_dir}/$1" ]
+	then
+		echo "Êtes-vous certain de vouloir supprimer la liste '$1' ?"
+		select choix in 'Oui' 'Non'
+		do
+			if [ "$choix" == 'Oui' ]
+			then
+				rm -f "${used_dir}/$1"
+				echo "La liste '$1' a été supprimée."
+			else
+				echo "Liste '$1' non supprimée"
+			fi
+			break
+		done
+	else
+		echo "La liste '$1' n’existe pas."
+	fi
+#--
+elif [ "$1" == '-c' ]
+then
+	#chiffrement d’une liste existante
+	shift
+	if [ -f "${used_dir}/$1" ]
+	then
+		echo "Chiffrement de la liste '$1'."
+		openssl des3 -in "${used_dir}/$1" -out "${used_dir}/.$1" && rm "${used_dir}/$1"
+	else
+		echo "La liste '$1' n’existe pas."
+	fi
+#--
+elif [ "$1" == '-d' ]
+then
+	#déchiffrement d’une liste existante
+	shift
+	if [ -f "${used_dir}/.$1" ]
+	then
+		echo "Déchiffrement de la liste '$1'."
+		openssl des3 -d -in "${used_dir}/.$1" -out "${used_dir}/$1" && rm "${used_dir}/.$1"
+	else
+		echo "La liste '$1' n’existe pas."
+	fi
+#--
+elif [ "$1" == '-s' ]
+then
+	#tri d’une liste existante
+	shift
+	if [ -f "${used_dir}/$1" ]
+	then
+		titre=`head -n 1 "${used_dir}/$1"`
+		taches=`tail "${used_dir}/$1" -n +2 | sort`
+		echo "$titre" > "${used_dir}/$1"
+		echo "$taches" >> "${used_dir}/$1"
+		echo "La liste '$1' a été triée."
+	else
+		echo "La liste '$1' n’existe pas."
+	fi
+#--
+elif [ "$1" == '-e' ]
+then
+	#ouverture d’une liste existante avec l’éditeur standard
+	shift
+	if [ -f "${used_dir}/$1" ]
+	then
+		exec vim "${used_dir}/$1"
+	else
+		read -p "La liste $1 n’existe pas encore. Voulez-vous la créer ? (O/N) " choix
+		if [ "$choix" == 'O' ] || [ "$choix" == 'o' ]
+		then
+			exec vim "${used_dir}/$1"
+		fi
+	fi
+#--
+elif [ -f "${used_dir}/$1" ] && [ ! "${1:0:1}" == '.' ]
+then
+	#utilisation d'une liste existante
+	nom=$1
+	shift
+	exec 3<> "${used_dir}/$nom"
+	read -r titre <&3
+	i=0
+	taches=()
+	valid=()
+	nb_valid=0
+	while read -r tache <&3
+	do
+		(( i++ ))
+		if [ "${tache:0:2}" == '~~' ]
+		then
+			valid[$i]=1
+			taches[$i]="${tache:2}"
+			(( nb_valid++ ))
+		else
+			valid[$i]=0
+			taches[$i]="$tache"
+		fi
+	done
+	taille=$i
+	exec 3>&-
+	
+	#action
+	if [ "$1" == 't' ]
+	then
+		#édition du titre de la liste
+		read -p 'Entrez le titre : ' -ei "${titre}" titre
+	#--
+	elif [ "${1:0:1}" == '+' ]
+	then
+		#ajout d'une tâche
+		tache="$*"
+		tache="${tache:1}"
+		if [ -n "$tache" ]
+		then
+			(( taille++ ))
+			taches[$taille]="$tache"
+			valid[$taille]=0
+			echo 'Tâche ajoutée.';
+		else
+			echo "Aucun changement effectué."
+		fi
+	#--
+	elif [ "${1:0:1}" == '-' ]
+	then
+		#suppression d'une tâche
+		num="${1:1}"
+		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
+		then
+			echo "Suppression de '${taches[$num]}'."
+			taches[$num]=''
+		else
+			echo "Mauvais numéro de tâche donné. Liste non modifiée."
+		fi
+	#--
+	elif [ "${1:0:1}" == 'v' ]
+	then
+		#validation/invalidation d'une tâche
+		num="${1:1}"
+		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
+		then
+			if [ "${valid[$num]}" -eq 1 ]
+			then
+				valid[$num]=0
+				echo "'${taches[$num]}' a été marqué comme invalidée."
+			else
+				valid[$num]=1
+				echo "'${taches[$num]}' a été marqué comme validée."
+			fi
+		else
+			echo "Mauvais numéro de tâche donné. Liste non modifiée."
+		fi
+	#--
+	elif [ "${1:0:1}" == 'e' ]
+	then
+		#édition du texte d’une tâche
+		num="${1:1}"
+		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
+		then
+			echo "Édition de la tâche numéro $num :"
+			read -eri "${taches[$num]}" taches[$num]
+		else
+			echo 'Mauvais numéro de tâche donné. Liste non modifiée.'
+		fi
+	#--
+	elif [ "$1" -eq "$1" ] 2>/dev/null && [ "$1" -ge 1 ] && [ "$1" -le $taille ]
+	then
+		num="$1"
+		shift
+		if [ "${1:0:1}" == '+' ] || [ "${1:0:1}" == '-' ]
+		then
+			#décaler la tâche dans la liste
+			if [ "${1:1}" -eq "${1:1}" ] 2>/dev/null
+			then
+				offset="${1:1}"
+			else
+				offset=1
+			fi
+			signe="${1:0:1}"
+			echo "'${taches[$num]}' va être décalé de ${signe}${offset} rangs."
+			while [ $offset -gt 0 ]
+			do
+				if [ "$signe" == '-' -a "$num" -gt 1 ] || [ "$signe" == '+' -a "$num" -lt "$taille" ]
+				then
+					tmp_tache="${taches[$(bc <<< "${num}${signe}1")]}"
+					tmp_valid="${valid[$(bc <<< "${num}${signe}1")]}"
+					taches[$(bc <<< "${num}${signe}1")]="${taches[$num]}"
+					valid[$(bc <<< "${num}${signe}1")]="${valid[$num]}"
+					taches[$num]="$tmp_tache"
+					valid[$num]="$tmp_valid"
+					(( num-- ))
+					(( offset-- ))
+				else
+					echo 'La tâche est au bord de la liste !'
+					offset=0
+				fi
+			done
+		else
+			#rien
+			echo "Rien à faire. Faites 'li -h' pour l'aide."
+		fi
+	#--
+	elif [ -n "$1" ]
+	then
+		#choix invalide
+		echo "Erreur : action invalide. Faites 'li -h' pour l'aide."
+	else
+		#affichage de la liste
+		echo "=== ($nom, $nb_valid/$taille) $titre"
+		for i in `seq 1 $taille`
+		do
+			echo -n "$i	| "
+			if [ "${valid[$i]}" -eq 1 ]
+			then
+				echo -n 'OK | '
+			else
+				echo -n '   | '
+			fi
+			echo "${taches[$i]}"
+		done
+		echo '==='
+	fi
+	
+	#enregistrement de la liste
+	fich="${used_dir}/$nom"
+	echo "$titre" > "$fich"
+	for i in `seq 1 $taille`
+	do
+		if [ -n "${taches[$i]}" ]
+		then
+			if [ "${valid[$i]}" -eq 1 ]
+			then
+				echo -n '~~' >> "$fich"
+			fi
+			echo "${taches[$i]}" >> "$fich"
+		fi
+	done
+#--
+else
+	echo "Erreur : Liste '$1' inexistante. Faites 'li -h' pour l'aide."
+	exit 1
+fi

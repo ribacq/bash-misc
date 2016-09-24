@@ -1,0 +1,149 @@
+#!/bin/bash
+if [ "$1" == '-h' ] || [ "$1" == '--help' ]
+then
+	echo "=== 9blanc"
+	echo
+	echo "Une case est blanche (O) ou noire (#)."
+	echo "À gauche est le plateau de jeu, à droite les contôles."
+	echo "Deux cases sont dites adjacentes si elles sont reliées par un trait."
+	echo "Appuyer sur une case l'inverse ainsi que toutes celles adjacentes."
+	echo "La victoire s'obtient en blachissant (O) toutes les cases."
+	echo "La touche 'E' permet de quitter le jeu à tout moment."
+	echo
+	echo "=== Bon jeu !"
+	exit 0
+fi
+
+clear
+old_stty=$(stty -g)
+stty -icanon
+
+#Plateau
+tput cup 0 0
+echo ' - - -   |  v-d-l-j'
+echo '| | | |  |  | | | |'
+echo ' - - -   |  t-s-r-n'
+echo '| | | |  |  | | | |'
+echo ' - - -   |  q-g-h-f'
+echo '         |         '
+echo '+--------+--------+'
+echo '|     9-BLANC     |'
+echo '+-----------------+'
+echo '| [ ] Coups : 0   |'
+echo '+-----------------+'
+
+#Coordonnées
+parc='0 1 2 3 4 5 6 7 8 9 10 11'
+x=(0 2 4 6 0 2 4 6 0 2 4 6)
+y=(0 0 0 0 2 2 2 2 4 4 4 4)
+coups=0
+
+#Initialisation
+cases=()
+for i in $parc
+do
+	tput cup ${y[$i]} ${x[$i]}
+	if [ $[($RANDOM % 2) + 1] = 1 ]
+	then
+		cases[$i]=0
+		echo -n 'O'
+	else
+		cases[$i]=1
+		echo -n '#'
+	fi
+done
+
+#Boucle principale
+continuer=true
+while [ $continuer = true ]
+do
+	#Action
+	tput cup 9 3
+	touche=$(head -c1)
+	case $touche in
+		'v')
+			aInverser='0 1 4'
+		;; 'd')
+			aInverser='0 1 2 5'
+		;; 'l')
+			aInverser='1 2 3 6'
+		;; 'j')
+			aInverser='2 3 7'
+		;; 't')
+			aInverser='0 4 5 8'
+		;; 's')
+			aInverser='1 4 5 6 9'
+		;; 'r')
+			aInverser='2 5 6 7 10'
+		;; 'n')
+			aInverser='3 6 7 11'
+		;; 'q')
+			aInverser='4 8 9'
+		;; 'g')
+			aInverser='5 8 9 10'
+		;; 'h')
+			aInverser='6 9 10 11'
+		;; 'f')
+			aInverser='7 10 11'
+		;; 'e')
+			aInverser=''
+			continuer=false
+		;; *)
+			aInverser=''
+	esac
+	
+	#Compteur
+	if [ -n "$aInverser" ]
+	then
+		(( coups++ ))
+	fi
+	
+	#Affichage et inversion
+	for i in $aInverser
+	do
+		cases[$i]=$[1 - ${cases[i]}]
+		tput cup ${y[$i]} ${x[$i]}
+		if [ ${cases[$i]} -eq 0 ]
+		then
+			echo -n 'O'
+		else
+			echo -n '#'
+		fi
+	done
+	tput cup 9 14
+	echo -n "$coups"
+	
+	#Vérification
+	if [ "${cases[*]}" = "0 0 0 0 0 0 0 0 0 0 0 0" ]
+	then
+		tput cup 1 20
+		echo  'V'
+		sleep 0.2
+		tput cup 2 20
+		echo  'I'
+		sleep 0.2
+		tput cup 3 20
+		echo  'C'
+		sleep 0.2
+		tput cup 4 20
+		echo  'T'
+		sleep 0.2
+		tput cup 5 20
+		echo  'O'
+		sleep 0.2
+		tput cup 6 20
+		echo  'I'
+		sleep 0.2
+		tput cup 7 20
+		echo  'R'
+		sleep 0.2
+		tput cup 8 20
+		echo  'E'
+		continuer=false
+	fi
+done
+
+#Fin
+tput cup 11 0
+stty "$old_stty"
+exit 0

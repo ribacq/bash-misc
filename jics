@@ -1,0 +1,195 @@
+#!/bin/bash
+#JIrsad’s Console Snake
+
+#Terminal configuration allowing to write anywhere
+clear
+old_stty="$(stty -g)"
+stty -icanon
+tput civis
+
+frame(){
+	#Frame tracing function
+	local i j
+	local height=$1
+	local width=$2
+
+	#Switch to draw mode
+	echo -en '\e(0'
+
+	#Top row
+	echo -n 'l'
+	j=0
+	while [ "$j" -lt "$width" ]
+	do
+		echo -n 'q'
+		(( j++ ))
+	done
+	echo 'k'
+	
+	#Side columns
+	i=0
+	while [ "$i" -lt "$height" ]
+	do
+		(( i++ ))
+		echo -n 'x'
+		j=0
+		while [ "$j" -lt "$width" ]
+		do
+			(( j++ ))
+			echo -n ' '
+		done
+		echo 'x'
+	done
+	
+	#Bottom row
+	echo -n 'm'
+	j=0
+	while [ "$j" -lt "$width" ]
+	do
+		echo -n 'q'
+		(( j++ ))
+	done
+	echo 'j'
+
+	#Switch back to write mode
+	echo -en '\e(B'
+
+	return 0;
+}
+
+move(){
+	#Setting the new body in position of the old head
+	echo -en '\e[0;32m'
+	tput cup "${vi[-1]}" "${vj[-1]}"
+	echo -n "$snake_char_body"
+	echo -en '\e[m'
+	
+	#Calculate the new head
+	vi=( ${vi[@]} $(( ${vi[-1]}+$di )) )
+	vj=( ${vj[@]} $(( ${vj[-1]}+$dj )) )
+	
+	#Removing the tail if the apple is not found. Otherwise, make new apple
+	if [ ${vi[-1]} -eq $apple_i ] && [ ${vj[-1]} -eq $apple_j ]
+	then
+		(( apples_eaten++ ))
+		new_apple
+		tput cup $(( $height+3 )) 0
+		echo -n "Apples eaten: ${apples_eaten}"
+	else
+		tput cup "${vi[0]}" "${vj[0]}"
+		echo -n ' '
+		vi=("${vi[@]:1}")
+		vj=("${vj[@]:1}")
+	fi
+	
+	#Writing the new head
+	echo -en '\e[0;32m'
+	tput cup "${vi[-1]}" "${vj[-1]}"
+	echo -n "$snake_char_head"
+	echo -en '\e[m'
+
+	return 0;
+}
+
+new_apple(){
+	#Randomly places a new apple on the board	
+	apple_i=$(( 1 + $RANDOM % $height ))
+	apple_j=$(( 1 + $RANDOM % $width ))
+	tput cup $apple_i $apple_j
+	echo -en '\e[0;31mó\e[m'
+	return 0;
+}
+
+main(){
+	#Main. Starts by defining the variables
+	#Board size
+	height=$(( $(tput lines)-10 ))
+	width=$(( $(tput cols) -10 ))
+	
+	#Snake dimensions
+	vi=(5 5 5 5 5 5)
+	vj=(4 5 6 7 8 9)
+	
+	#Snake directions
+	di=0
+	dj=1
+
+	#Snake display characters
+	snake_char_head='Ə'
+	snake_char_body='o'
+	
+	#Score
+	apples_eaten=0
+	declare apple_i apple_j
+	
+	#Initializing the frame
+	tput cup 0 0
+	frame $height $width
+	new_apple
+	
+	#First display of snake
+	for (( i=0 ; i<${#vi[*]} ; i++ ))
+	do
+		tput cup "${vi[$i]}" "${vj[$i]}"
+		echo -en "\e[0;32m$snake_char_body\e[m"
+	done
+	
+	#Main loop
+	cont=true
+	while $cont
+	do
+		#Get user action
+		action=''
+		read -n 1 -s -t 0.1 action
+		
+		#Set direction variables or exit the game
+		case "$action" in
+			't') (( tmp=dj )); (( dj=di )); (( di=tmp )); (( di*=-1 )) ;; #Turn left
+			'n') (( tmp=dj )); (( dj=di )); (( di=tmp )); (( dj*=-1 )) ;; #Turn right
+			'q') cont=false;;
+		esac
+		
+		#Is there a collision?
+		collision=false
+
+		#With a wall?
+		if
+		[ $(( ${vi[-1]}+${di} )) -eq $(( ${height}+1 )) ] ||
+		[ $(( ${vi[-1]}+${di} )) -eq '0' ] ||
+		[ $(( ${vj[-1]}+${dj} )) -eq $(( ${width}+1 )) ] ||
+		[ $(( ${vj[-1]}+${dj} )) -eq '0' ]
+		then
+			collision=true
+		fi
+		
+		#With the snake’s own body?
+		for i in ${!vi[@]}
+		do
+			if [ $(( ${vi[-1]}+${di} )) -eq ${vi[$i]} ] && [ $(( ${vj[-1]}+${dj} )) -eq ${vj[$i]} ]
+			then
+				collision=true
+				break
+			fi
+		done
+
+		#Move if there’s no collision
+		if ! $collision
+		then
+			move
+		else
+			cont=false
+		fi
+	done
+
+	return 0;
+}
+
+#Launch main function
+main
+
+#End
+tput cnorm
+tput cup "$(( $height+5 ))"
+stty "$old_stty"
+echo "Game Over."
+exit 0
