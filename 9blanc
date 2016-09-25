@@ -1,16 +1,27 @@
 #!/bin/bash
 if [ "$1" == '-h' ] || [ "$1" == '--help' ]
 then
-	echo "=== 9blanc"
+	echo "9blanc"
+	echo "======"
 	echo
-	echo "Une case est blanche (O) ou noire (#)."
+	echo "Règles"
+	echo "------"
+	echo -e "Une case est blanche (\e[47;30m.\e[m) ou noire (\e[40;37m.\e[m)."
 	echo "À gauche est le plateau de jeu, à droite les contôles."
 	echo "Deux cases sont dites adjacentes si elles sont reliées par un trait."
 	echo "Appuyer sur une case l'inverse ainsi que toutes celles adjacentes."
-	echo "La victoire s'obtient en blachissant (O) toutes les cases."
+	echo "La victoire s'obtient en blachissant toutes les cases."
 	echo "La touche 'E' permet de quitter le jeu à tout moment."
 	echo
-	echo "=== Bon jeu !"
+	echo "Controles"
+	echo "---------"
+	echo 'V-D-L-J'
+	echo '| | | |'
+	echo 'T-S-R-N'
+	echo '| | | |'
+	echo 'Q-G-H-F'
+	echo
+	echo "Bon jeu !"
 	exit 0
 fi
 
@@ -20,17 +31,12 @@ stty -icanon
 
 #Plateau
 tput cup 0 0
-echo ' - - -   |  v-d-l-j'
-echo '| | | |  |  | | | |'
-echo ' - - -   |  t-s-r-n'
-echo '| | | |  |  | | | |'
-echo ' - - -   |  q-g-h-f'
-echo '         |         '
-echo '+--------+--------+'
-echo '|     9-BLANC     |'
-echo '+-----------------+'
-echo '| [ ] Coups : 0   |'
-echo '+-----------------+'
+echo
+echo '         9-BLANC'
+echo '         Coups : '
+echo '         0'
+echo
+echo '         [ ]     '
 
 #Coordonnées
 parc='0 1 2 3 4 5 6 7 8 9 10 11'
@@ -38,28 +44,49 @@ x=(0 2 4 6 0 2 4 6 0 2 4 6)
 y=(0 0 0 0 2 2 2 2 4 4 4 4)
 coups=0
 
+#Constantes d’affichage
+ca_no(){
+	tput cup $1 $2
+	echo -en '\e[40;37m \e[m'
+	tput cup "$(( $1+1 ))" $2
+	echo -en '\e[40;37m.\e[m'
+	tput cup $1 "$(( $2+1 ))"
+	echo -en '\e[40;37m \e[m'
+	tput cup "$(( $1+1 ))" "$(( $2+1 ))"
+	echo -en '\e[40;37m \e[m'
+}
+ca_bl(){
+	tput cup $1 $2
+	echo -en '\e[47;30m \e[m'
+	tput cup "$(( $1+1 ))" $2
+	echo -en '\e[47;30m.\e[m'
+	tput cup $1 "$(( $2+1 ))"
+	echo -en '\e[47;30m \e[m'
+	tput cup "$(( $1+1 ))" "$(( $2+1 ))"
+	echo -en '\e[47;30m \e[m'
+}
+
 #Initialisation
 cases=()
 for i in $parc
 do
-	tput cup ${y[$i]} ${x[$i]}
 	if [ $[($RANDOM % 2) + 1] = 1 ]
 	then
 		cases[$i]=0
-		echo -n 'O'
+		ca_bl ${y[$i]} ${x[$i]}
 	else
 		cases[$i]=1
-		echo -n '#'
+		ca_no ${y[$i]} ${x[$i]}
 	fi
 done
 
 #Boucle principale
 continuer=true
-while [ $continuer = true ]
+while $continuer
 do
 	#Action
-	tput cup 9 3
-	touche=$(head -c1)
+	tput cup 5 10
+	read -n 1 touche
 	case $touche in
 		'v')
 			aInverser='0 1 4'
@@ -102,48 +129,52 @@ do
 	for i in $aInverser
 	do
 		cases[$i]=$[1 - ${cases[i]}]
-		tput cup ${y[$i]} ${x[$i]}
 		if [ ${cases[$i]} -eq 0 ]
 		then
-			echo -n 'O'
+			ca_bl ${y[$i]} ${x[$i]}
 		else
-			echo -n '#'
+			ca_no ${y[$i]} ${x[$i]}
 		fi
 	done
-	tput cup 9 14
+	tput cup 3 9
 	echo -n "$coups"
 	
 	#Vérification
 	if [ "${cases[*]}" = "0 0 0 0 0 0 0 0 0 0 0 0" ]
 	then
-		tput cup 1 20
-		echo  'V'
+		echo -en '\e[47;30m'
+		tput cup 6 0
+		echo '  '
 		sleep 0.2
-		tput cup 2 20
-		echo  'I'
+		tput cup 6 2
+		echo 'V '
 		sleep 0.2
-		tput cup 3 20
-		echo  'C'
+		tput cup 6 4
+		echo 'I '
 		sleep 0.2
-		tput cup 4 20
-		echo  'T'
+		tput cup 6 6
+		echo 'C '
 		sleep 0.2
-		tput cup 5 20
-		echo  'O'
+		tput cup 6 8
+		echo 'T '
 		sleep 0.2
-		tput cup 6 20
-		echo  'I'
+		tput cup 6 10
+		echo 'O '
 		sleep 0.2
-		tput cup 7 20
-		echo  'R'
+		tput cup 6 12
+		echo 'I '
 		sleep 0.2
-		tput cup 8 20
-		echo  'E'
+		tput cup 6 14
+		echo 'R '
+		sleep 0.2
+		tput cup 6 16
+		echo 'E '
+		echo -en '\e[m'
 		continuer=false
 	fi
 done
 
 #Fin
-tput cup 11 0
+tput cup 7 0
 stty "$old_stty"
 exit 0
