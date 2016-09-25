@@ -1,6 +1,38 @@
 #!/bin/bash
 #JIrsad’s Console Snake
 
+#Help
+if [ "$1" == '-h' ] || [ "$1" == '--help' ]
+then
+	help_str="\
+________ \e[31mó \e[32mƏooooooo\e[m ________
+JICS: JIrsad’s Console Snake
+
+Rule
+====
+Snake is a simple game in which the player (you) controls a snake that has to
+Eat all of the apples that it can. The game ends when you choose to leave, or
+when the snake’s head collides with a wall or its own body. The difficulty lies
+in the fact that the snake’s speed increases with every two apples you succeed
+to take, until it is at its maximum at twenty apples.
+
+Controls
+========
+T: turn to your left;
+N: turn to your right;
+Q: abandon the game.
+
+Command-line usage
+==================
+jics			launch the game;
+jics --help, -h		display this help.
+
+Have a nice game!\
+"
+	echo -e "$help_str"
+	exit 0
+fi
+
 #Terminal configuration allowing to write anywhere
 clear
 old_stty="$(stty -g)"
@@ -73,6 +105,10 @@ move(){
 	then
 		(( apples_eaten++ ))
 		new_apple
+		if [ $(( $apples_eaten % 2 )) -eq 0 ] && [ $(bc <<< "$lag > 0") -eq 1 ]
+		then
+			lag=$(bc <<< $lag-0.01)
+		fi
 		tput cup $(( $height+3 )) 0
 		echo -n "Apples eaten: ${apples_eaten}"
 	else
@@ -103,8 +139,8 @@ new_apple(){
 main(){
 	#Main. Starts by defining the variables
 	#Board size
-	height=$(( $(tput lines)-10 ))
-	width=$(( $(tput cols) -10 ))
+	height=$(( $(tput lines)-7 ))
+	width=$(( $(tput cols)-2 ))
 	
 	#Snake dimensions
 	vi=(5 5 5 5 5 5)
@@ -121,6 +157,7 @@ main(){
 	#Score
 	apples_eaten=0
 	declare apple_i apple_j
+	lag=0.1
 	
 	#Initializing the frame
 	tput cup 0 0
@@ -140,7 +177,7 @@ main(){
 	do
 		#Get user action
 		action=''
-		read -n 1 -s -t 0.1 action
+		read -n 1 -s -t ${lag} action
 		
 		#Set direction variables or exit the game
 		case "$action" in
