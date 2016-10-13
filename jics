@@ -1,6 +1,11 @@
 #!/bin/bash
 #JIrsad’s Console Snake
 
+#User settings
+CTRLS_LEFT='t'
+CTRLS_RIGHT='n'
+CTRLS_EXIT='q'
+
 #Help
 if [ "$1" == '-h' ] || [ "$1" == '--help' ]
 then
@@ -105,7 +110,7 @@ move(){
 	then
 		(( apples_eaten++ ))
 		new_apple
-		if [ $(( $apples_eaten % 2 )) -eq 0 ] && [ $(bc <<< "$lag > 0") -eq 1 ]
+		if [ $(( $apples_eaten % 2 )) -eq 0 ] && [ $(bc <<< "$lag > 0.01") -eq 1 ]
 		then
 			lag=$(bc <<< $lag-0.01)
 		fi
@@ -181,9 +186,9 @@ main(){
 		
 		#Set direction variables or exit the game
 		case "$action" in
-			't') (( tmp=dj )); (( dj=di )); (( di=tmp )); (( di*=-1 )) ;; #Turn left
-			'n') (( tmp=dj )); (( dj=di )); (( di=tmp )); (( dj*=-1 )) ;; #Turn right
-			'q') cont=false;;
+			"${CTRLS_LEFT}") (( tmp=dj )); (( dj=di )); (( di=tmp )); (( di*=-1 )) ;; #Turn left
+			"${CTRLS_RIGHT}") (( tmp=dj )); (( dj=di )); (( di=tmp )); (( dj*=-1 )) ;; #Turn right
+			"${CTRLS_EXIT}") cont=false;;
 		esac
 		
 		#Is there a collision?
