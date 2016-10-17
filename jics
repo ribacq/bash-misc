@@ -41,7 +41,7 @@ fi
 #Terminal configuration allowing to write anywhere
 clear
 old_stty="$(stty -g)"
-stty -icanon
+stty -icanon -echo
 tput civis
 
 frame(){
@@ -235,3 +235,4 @@ tput cup "$(( $height+5 ))"
 stty "$old_stty"
 echo "Game Over."
 exit 0
+
