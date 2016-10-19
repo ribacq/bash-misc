@@ -180,9 +180,16 @@ main(){
 	cont=true
 	while $cont
 	do
+		#Lag depending on H/V direction
+		actual_lag="${lag}"
+		if [ "${di}" -eq 1 ]
+		then
+			actual_lag="$( bc <<< "${actual_lag}*1.45" )"
+		fi
+
 		#Get user action
 		action=''
-		read -n 1 -s -t ${lag} action
+		read -n 1 -s -t ${actual_lag} action
 		
 		#Set direction variables or exit the game
 		case "$action" in
