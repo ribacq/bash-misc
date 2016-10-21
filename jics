@@ -55,24 +55,18 @@ frame(){
 
 	#Top row
 	echo -n 'l'
-	j=0
-	while [ "$j" -lt "$width" ]
+	for (( j=0; j<${width}; j++ ))
 	do
 		echo -n 'q'
-		(( j++ ))
 	done
 	echo 'k'
 	
 	#Side columns
-	i=0
-	while [ "$i" -lt "$height" ]
+	for (( i=0; i<${height}; i++ ))
 	do
-		(( i++ ))
 		echo -n 'x'
-		j=0
-		while [ "$j" -lt "$width" ]
+		for (( j=0; j<${width} ; j++ ))
 		do
-			(( j++ ))
 			echo -n ' '
 		done
 		echo 'x'
@@ -80,11 +74,9 @@ frame(){
 	
 	#Bottom row
 	echo -n 'm'
-	j=0
-	while [ "$j" -lt "$width" ]
+	for (( j=0; j<${width}; j++ ))
 	do
 		echo -n 'q'
-		(( j++ ))
 	done
 	echo 'j'
 
