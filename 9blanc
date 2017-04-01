@@ -87,7 +87,7 @@ do
 	#Action
 	tput cup 5 10
 	read -n 1 touche
-	case $touche in
+	case "$touche" in
 		'v')
 			aInverser='0 1 4'
 		;; 'd')
