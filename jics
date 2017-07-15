@@ -1,5 +1,8 @@
 #!/bin/bash
-#JIrsad’s Console Snake
+# JIrsad’s Console Snake
+# Written by Quentin RIBAC (2016)
+# This is free software.
+# See LICENSE file for legal information.
 
 #User settings
 CTRLS_LEFT='t'
@@ -126,6 +129,8 @@ move(){
 
 new_apple(){
 	#Randomly places a new apple on the board	
+	#apple_i=$(( 1 + $RANDOM % $height ))
+	#apple_j=$(( 1 + $RANDOM % $width ))
 	apple_i=$(( 1 + $RANDOM % $height ))
 	apple_j=$(( 1 + $RANDOM % $width ))
 	tput cup $apple_i $apple_j

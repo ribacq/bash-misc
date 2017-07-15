@@ -1,5 +1,8 @@
 #!/bin/bash
-#li : quick CLI ckecklists management tool
+# li : quick CLI ckecklists management tool
+# Written by Quentin RIBAC (2016)
+# This is free software.
+# See LICENSE file for legal information.
 
 manual="\
 li : gestionnaire rapide de listes en console

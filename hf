@@ -1,0 +1,20 @@
+#!/bin/bash
+# HF : Horloge Floue
+# Written by Quentin RIBAC (2017)
+# This is free software.
+# See LICENSE file for legal information.
+
+hNames=( "minuit" "une heure" "deux heures" "trois heures" "quatre heures" "cinq heures" "six heures" "sept heures" "huit heures" "neuf heures" "dix heures" "onze heures" "midi" )
+qNames=( "" "et quart" "et demi" "moins le quart" )
+
+h="$(date '+%H')"
+q="$(date '+%M')"
+q="$(bc <<< "(${q} + 7.5) / 15")"
+
+[ "${q}" -ge 3 ] && (( h++ ))
+[ "${h}" -ne 12 ] && (( h %= 12 ))
+
+echo "${hNames[$h]} ${qNames[$q]}"
+
+exit 0
+

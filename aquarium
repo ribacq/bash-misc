@@ -1,5 +1,8 @@
 #!/bin/bash
 ###### AQUARIUM : politesse codifiée
+# Written by Quentin RIBAC (2016)
+# This is free software.
+# See LICENSE file for legal information.
 
 ##### Constantes utilisées
 span_max=3600

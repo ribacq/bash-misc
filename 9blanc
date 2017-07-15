@@ -1,4 +1,8 @@
 #!/bin/bash
+# Written by Quentin RIBAC (2016)
+# This is free software.
+# See LICENSE file for legal information.
+
 if [ "$1" == '-h' ] || [ "$1" == '--help' ]
 then
 	echo "9blanc"
