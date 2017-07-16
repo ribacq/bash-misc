@@ -7,8 +7,8 @@
 hNames=( "minuit" "une heure" "deux heures" "trois heures" "quatre heures" "cinq heures" "six heures" "sept heures" "huit heures" "neuf heures" "dix heures" "onze heures" "midi" )
 qNames=( "" "et quart" "et demi" "moins le quart" )
 
-h="$(date '+%H')"
-q="$(date '+%M')"
+h="$(date '+%_H')"
+q="$(date '+%_M')"
 q="$(bc <<< "(${q} + 7.5) / 15")"
 
 [ "${q}" -ge 3 ] && (( h++ ))
