@@ -16,5 +16,5 @@ A snake game. The controls are simple: `t` to turn to your left, `n` to turn to 
 A simple list management tool. Try `li --help` for more information on usage.
 
 ## hf
-A non-precise clock software. Prints the time (in French) rounded to the quarter of an hour.
+A non-precise clock software. Prints the time (in French) rounded to the quarter of an hour, or five minutes precison with `-c` cli argument.
 

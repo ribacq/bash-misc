@@ -3,18 +3,31 @@
 # Written by Quentin RIBAC (2017)
 # This is free software.
 # See LICENSE file for legal information.
+# Usage: -c for 5 minutes precision, 15 minutes precision otherwise
 
 hNames=( "minuit" "une heure" "deux heures" "trois heures" "quatre heures" "cinq heures" "six heures" "sept heures" "huit heures" "neuf heures" "dix heures" "onze heures" "midi" )
 qNames=( "" " et quart" " et demi" " moins le quart" )
+cNames=( "" " cinq" " dix" " et quart" " vingt" " vingt-cinq" " et demi" " moins vingt-cinq" " moins vingt" " moins le quart" " moins dix" " moins cinq" )
 
-h="$(date '+%_H')"
-q="$(date '+%_M')"
-q="$(bc <<< "(${q} + 7.5) / 15")"
+srcH="$(date '+%_H')"
+srcM="$(date '+%_M')"
 
-[ "${q}" -ge 3 ] && (( h++ ))
+h="${srcH}"
+q="$(bc <<< "(${srcM} + 7.5) / 15")"
+c="$(bc <<< "(${srcM} + 2.5) / 5")"
+
+if [ "${q}" -ge 3 ] || [ "${c}" -ge 7 ]
+then
+	(( h++ ))
+fi
 [ "${h}" -ne 12 ] && (( h %= 12 ))
 
-echo "${hNames[$h]}${qNames[$q]}"
+if [ "${1}" = '-c' ]
+then
+	echo "${hNames[$h]}${cNames[$c]}"
+	exit 0
+fi
 
+echo "${hNames[$h]}${qNames[$q]}"
 exit 0
 
