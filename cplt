@@ -1,0 +1,3 @@
+#!/bin/bash
+xsetroot -name "$(curl https://compliment-api.herokuapp.com)"
+
