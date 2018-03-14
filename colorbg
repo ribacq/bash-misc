@@ -1,0 +1,8 @@
+#!/bin/bash
+dims="$(xrandr -q | head -n 1 | grep -oe 'current [[:digit:]]* x [[:digit:]]*' | sed 's/current //;s/ x /\n/')"
+w="$(head -n 1 <<< "$dims")"
+h="$(head -n 2 <<< "$dims" | tail -n 1)"
+iw="$((w/200))"
+ih="$((h/200))"
+
+head -c "$((3*iw*ih))" /dev/urandom | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size "${iw}x${ih}" RGB:-
