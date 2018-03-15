@@ -23,18 +23,18 @@ then
 	if [ "$span" -lt "$span_min" ]
 	then
 		# Joie : plus de 90% du temps restant
-		echo "\\(^_^)/"
+		echo -n "\\(^_^)/"
 	elif [ "$span" -lt "$span_danger" ]
 	then
 		# État normal : de 10% à 90% du temps restant
-		echo "<(n_n)>"
+		echo -n "<(n_n)>"
 	elif [ "$span" -lt "$span_max" ]
 	then
 		# Danger imminent : moins de 10% du temps restant
-		echo ".(ó_ò)."
+		echo -n ".(ó_ò)."
 	else
 		# En attente grave d’aquarium : temps dépassé
-		echo "/(;_;)\\"
+		echo -n "/(;_;)\\"
 	fi
 	exit 0
 elif [ "$1" == '--params' ] || [ "$1" == '-p' ]

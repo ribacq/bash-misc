@@ -2,19 +2,21 @@
 dims="$(xrandr -q | grep -oe 'current [[:digit:]]* x [[:digit:]]*' | sed 's/current //;s/ x /\n/')"
 w="$(head -n 1 <<< "$dims")"
 h="$(head -n 2 <<< "$dims" | tail -n 1)"
-iw="$((w/50))"
-ih="$((h/50))"
+iw="$((w/150))"
+ih="$((h/150))"
 
-ctr="$(head -c 3 /dev/random)"
-for ((y=0; y < ih; y++))
-do
-	for ((x=0; x < iw; x++))
-	do
-		if [ $(( (x - (iw/2))**2 + (y - (ih/2))**2 < ih/2)) == 1 ]
-		then
-			echo -n "$ctr"
-		else
-			head -c 3 /dev/random
-		fi
-	done
-done | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size "${iw}x${ih}" RGB:-
+#ctr="$(head -c 3 /dev/random)"
+#for ((i=0; i < ih; i++))
+#do
+#	for ((j=0; j < iw; j++))
+#	do
+#		x=$((j - iw/2 ))
+#		y=$((i - ih/2 ))
+#		if [ $(( x**2 + y**2 < ih/2 )) == 0 ]; then
+#			head -c 3 /dev/random
+#		else
+#			echo -n "$ctr"
+#		fi
+#	done
+#done
+head -c "$((3*iw*ih))" /dev/urandom | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size "${iw}x${ih}" RGB:-
