@@ -1,5 +1,5 @@
 #!/bin/bash
-dims="$(xrandr -q | head -n 1 | grep -oe 'current [[:digit:]]* x [[:digit:]]*' | sed 's/current //;s/ x /\n/')"
+dims="$(xrandr -q | grep -oe 'current [[:digit:]]* x [[:digit:]]*' | sed 's/current //;s/ x /\n/')"
 w="$(head -n 1 <<< "$dims")"
 h="$(head -n 2 <<< "$dims" | tail -n 1)"
 iw="$((w/150))"
