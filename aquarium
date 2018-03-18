@@ -6,8 +6,8 @@
 
 ##### Constantes utilisées
 span_max=3600
-span_min=`bc <<< "$span_max*0.1/1"`
-span_danger=`bc <<< "$span_max*0.9/1"`
+span_min="$( bc <<< "$span_max*0.1/1" )"
+span_danger="$( bc <<< "$span_max*0.9/1" )"
 
 ##### Récupération de la date de dernier appel (dernière ligne de ce fichier)
 lastdate="$(tail -n 1 $0)"
@@ -23,18 +23,18 @@ then
 	if [ "$span" -lt "$span_min" ]
 	then
 		# Joie : plus de 90% du temps restant
-		echo -n "\\(^_^)/"
+		echo "\\(^_^)/"
 	elif [ "$span" -lt "$span_danger" ]
 	then
 		# État normal : de 10% à 90% du temps restant
-		echo -n "<(n_n)>"
+		echo "<(n_n)>"
 	elif [ "$span" -lt "$span_max" ]
 	then
 		# Danger imminent : moins de 10% du temps restant
-		echo -n ".(ó_ò)."
+		echo ".(ó_ò)."
 	else
 		# En attente grave d’aquarium : temps dépassé
-		echo -n "/(;_;)\\"
+		echo "/(;_;)\\"
 	fi
 	exit 0
 elif [ "$1" == '--params' ] || [ "$1" == '-p' ]
@@ -49,16 +49,22 @@ sed -i '$ d' $0 && echo "$now" >> $0
 ##### Commentaire
 if [ "$span" -lt "$span_min" ]
 then
-	echo "Non mais c’est bon, attends un peu $(bc -l <<< "$span_min - $span") secondes de plus que ça !"
+	m="$(( (span_min - span) / 60 ))"
+	s="$(( span_min - span - m*60 ))"
+	echo "Non mais c’est bon, attends un peu ${m}m${s}s de plus que ça !"
 elif [ "$span" -lt "$span_max" ]
 then
-	echo "Ça fait $span secondes, merci bien."
+	m="$((span / 60 ))"
+	s="$((span - m*60 ))"
+	echo "Ça fait ${m}m${s}s, merci bien."
 else
-	echo "$(bc -l <<< "$span - $span_max") secondes de retard ? Tu traînes, je trouve."
+	m="$(( (span - span_max) / 60 ))"
+	s="$(( span - span_max - m*60 ))"
+	echo "${m}m${s}s de retard ? Tu traînes, je trouve."
 fi
 
 ###### Fin de l’exécution
 exit 0
 
 ###### Date de dernier appel
-1505296816
+1521396188
