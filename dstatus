@@ -1,0 +1,38 @@
+#!/bin/bash
+# status string for dwm
+
+# time
+xrootname="$(hf -c)"
+
+# date and uptime in days
+xrootname+=" $(date '+%a' | colrm 3)$(date '+%d%m%y')"
+xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 86400")"
+
+# minutes before 12:00 or 17:30
+[ "$(date +%H)" -lt 12 ] && rDate='12:00' || rDate='17:30'
+xrootname+=" r$(bc <<< "($(date --date "$rDate" +%s) - $(date +%s)) / 60")"
+
+# connection status
+co="$(nmcli -t g | cut -d: -f1)"
+xrootname+=" @${co%nnecté}"
+
+# cpu load
+xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
+
+# cpu temperature
+xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
+
+# sound volume
+xrootname+=" v$(amixer | egrep -o 'Playback .* \[...?%\]' | sed -r 's/Playback .* \[(...?)%\]/\1/' | head -n 1)"
+
+# aquarium
+xrootname+=" $(aquarium -s)"
+
+# display this
+echo "${xrootname}"
+
+# Kraken BTC-EUR
+#xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]' | colrm 1 1 | colrm 5)"
+
+# Backlight
+#xrootname+=" b$(xbacklight -get | cut -d'.' -f1)"
