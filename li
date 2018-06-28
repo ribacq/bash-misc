@@ -33,6 +33,7 @@ li nom +tâche         Ajouter une tâche à la liste 'nom'
 li nom -n             Supprimer la tâche au numéro 'n' de la liste 'nom'
 li nom vn             Changer le statut de validation de la tâche au numéro 'n' de la liste 'nom'
 li nom en             Éditer le texte attribué de la tâche au numéro 'n' de la liste 'nom'
+li nom n              Afficher le texte de la tâche au numéro 'n' dans la liste 'nom'
 li nom n -[x]         Remonter la tâche au numéro 'n' dans la liste 'nom' d'un cran. Si le nombre x, est donné, la tâche est remontée de x crans.
 li nom n +[x]         Descend la tâche de la même manière.\
 "
@@ -355,8 +356,8 @@ then
 				fi
 			done
 		else
-			#rien
-			echo "Rien à faire. Faites 'li -h' pour l'aide."
+			#affichage du texte de la tâche
+			echo "${taches[$num]}"
 		fi
 	#--
 	elif [ -n "$1" ]
