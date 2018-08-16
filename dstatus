@@ -5,16 +5,18 @@
 xrootname="$(hf -c)"
 
 # date and uptime in days
-xrootname+=" $(date '+%a' | colrm 3)$(date '+%d%m%y')"
+jours=( "di" "lu" "ma" "me" "je" "ve" "sa" )
+xrootname+=" ${jours[$(date '+%w')]}$(date '+%d%m%y')"
 xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 86400")"
-
-# minutes before 12:00 or 17:20
-[ "$(date +%H)" -lt 12 ] && rDate='12:00' || rDate='17:30'
-xrootname+=" r$(bc <<< "($(date --date "$rDate" +%s) - $(date +%s)) / 60")"
 
 # connection status
 co="$(nmcli -t g | cut -d: -f1)"
-xrootname+=" @${co%nnected}"
+if [ "${co%nnected}" == 'co' ]
+then
+	xrootname+=" @ok"
+else
+	xrootname+=" @:("
+fi
 
 # cpu load
 xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
@@ -29,7 +31,7 @@ xrootname+=" v$(amixer | egrep -o 'Playback .* \[...?%\]' | sed -r 's/Playback .
 xrootname+=" $(aquarium -s)"
 
 # display this
-echo "${xrootname}"
+echo " ${xrootname} "
 
 # Kraken BTC-EUR
 #xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]' | colrm 1 1 | colrm 5)"
