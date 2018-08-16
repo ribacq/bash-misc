@@ -8,13 +8,13 @@ xrootname="$(hf -c)"
 xrootname+=" $(date '+%a' | colrm 3)$(date '+%d%m%y')"
 xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 86400")"
 
-# minutes before 12:00 or 17:30
+# minutes before 12:00 or 17:20
 [ "$(date +%H)" -lt 12 ] && rDate='12:00' || rDate='17:30'
 xrootname+=" r$(bc <<< "($(date --date "$rDate" +%s) - $(date +%s)) / 60")"
 
 # connection status
 co="$(nmcli -t g | cut -d: -f1)"
-xrootname+=" @${co%nnecté}"
+xrootname+=" @${co%nnected}"
 
 # cpu load
 xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
