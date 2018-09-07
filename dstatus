@@ -25,7 +25,7 @@ xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
 xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
 
 # sound volume
-xrootname+=" v$(amixer | egrep -o 'Playback .* \[...?%\]' | sed -r 's/Playback .* \[(...?)%\]/\1/' | head -n 1)"
+xrootname+=" v$(amixer -c 1 | egrep -o 'Playback .* \[...?%\]' | sed -r 's/Playback .* \[(...?)%\]/\1/' | head -n 1)"
 
 # aquarium
 xrootname+=" $(aquarium -s)"
