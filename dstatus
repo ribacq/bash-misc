@@ -7,7 +7,7 @@ xrootname="$(hf -c)"
 # date and uptime in days
 jours=( "di" "lu" "ma" "me" "je" "ve" "sa" )
 xrootname+=" ${jours[$(date '+%w')]}$(date '+%d%m%y')"
-xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 86400")"
+xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 3600")"
 
 # connection status
 co="$(nmcli -t g | cut -d: -f1)"
@@ -25,10 +25,10 @@ xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
 xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
 
 # sound volume
-xrootname+=" v$(amixer -c 1 | egrep -o 'Playback .* \[...?%\]' | sed -r 's/Playback .* \[(...?)%\]/\1/' | head -n 1)"
+xrootname+=" v$(soundvol)"
 
 # aquarium
-xrootname+=" $(aquarium -s)"
+xrootname+=" $(aquarium -s) $(aquarium -t)"
 
 # display this
 echo " ${xrootname} "

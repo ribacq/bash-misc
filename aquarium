@@ -37,6 +37,10 @@ then
 		echo "/(;_;)\\"
 	fi
 	exit 0
+elif [ "$1" == '--time' ] || [ "$1" == '-t' ]
+then
+	TZ=UTC date --date="@${span}" '+[%H:%M:%S]'
+	exit 0
 elif [ "$1" == '--params' ] || [ "$1" == '-p' ]
 then
 	echo "$span_min/$span_danger/$span_max — $span"
@@ -49,22 +53,16 @@ sed -i '$ d' $0 && echo "$now" >> $0
 ##### Commentaire
 if [ "$span" -lt "$span_min" ]
 then
-	m="$(( (span_min - span) / 60 ))"
-	s="$(( span_min - span - m*60 ))"
-	echo "Non mais c’est bon, attends un peu ${m}m${s}s de plus que ça !"
+	echo "Non mais c’est bon, attends un peu $(TZ=UTC date --date="@$(( span_min - span ))" '+%Mm%Ss') de plus que ça !"
 elif [ "$span" -lt "$span_max" ]
 then
-	m="$((span / 60 ))"
-	s="$((span - m*60 ))"
-	echo "Ça fait ${m}m${s}s, merci bien."
+	echo "Ça fait $(TZ=UTC date --date="@${span}" '+%Mm%Ss'), merci bien."
 else
-	m="$(( (span - span_max) / 60 ))"
-	s="$(( span - span_max - m*60 ))"
-	echo "${m}m${s}s de retard ? Tu traînes, je trouve."
+	echo "$(TZ=UTC date --date="@$(( span - span_max ))" '+%Hh%Mm%Ss') de retard ? Tu traînes, je trouve."
 fi
 
 ###### Fin de l’exécution
 exit 0
 
 ###### Date de dernier appel
-1521396188
+1543840093

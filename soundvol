@@ -1,0 +1,29 @@
+#!/bin/bash
+# sound volume controller
+
+cards="$(aplay -l)"
+card="$(echo "${cards}" | grep 'KLIM Impact' | egrep -o 'card .' | sed 's/card //' | head -n 1)"
+ctl="PCM"
+if [ -z "$card" ]
+then
+	card="$(echo "${cards}" | egrep -o 'card .' | sed 's/card //' | head -n 1)"
+	ctl="Master"
+fi
+
+arg="$1"
+if [ -z "$arg" ]
+then
+	amixer -c "$card" sget "$ctl" | egrep -o 'Playback .* \[...?%\]' | head -n 1 | sed -r 's/Playback .* \[(...?)%\]/\1/'
+elif [ "$arg" == 'toggle' ]
+then
+	amixer -c "$card" sset "$ctl" 'toggle'
+elif [ "$arg" == 'up' ]
+then
+	amixer -c "$card" sset "$ctl" '5%+'
+elif [ "$arg" == 'down' ]
+then
+	amixer -c "$card" sset "$ctl" '5%-'
+elif [ "$arg" == 'set' ] && [ -n "$2" ]
+then
+	amixer -c "$card" sset "$ctl" "$2"
+fi
