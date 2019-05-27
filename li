@@ -32,8 +32,10 @@ li nom                Afficher la liste 'nom'
 li nom +tâche         Ajouter une tâche à la liste 'nom'
 li nom -n             Supprimer la tâche au numéro 'n' de la liste 'nom'
 li nom vn             Changer le statut de validation de la tâche au numéro 'n' de la liste 'nom'
-li nom en             Éditer le texte attribué de la tâche au numéro 'n' de la liste 'nom'
 li nom n              Afficher le texte de la tâche au numéro 'n' dans la liste 'nom'
+li nom rn             Afficher les n premières tâches non validées de la liste 'nom'
+li nom p              Afficher le progrès (non validées/validées/total)
+li nom en             Éditer le texte attribué de la tâche au numéro 'n' de la liste 'nom'
 li nom n -[x]         Remonter la tâche au numéro 'n' dans la liste 'nom' d'un cran. Si le nombre x, est donné, la tâche est remontée de x crans.
 li nom n +[x]         Descend la tâche de la même manière.\
 "
@@ -309,6 +311,33 @@ then
 			fi
 		else
 			echo "Mauvais numéro de tâche donné. Liste non modifiée."
+		fi
+	#--
+	elif [ "$1" == 'p' ]
+	then
+		#stats
+		echo "($((taille-nb_valid))/$nb_valid/$taille)"
+	#--
+	elif [ "${1:0:1}" == 'r' ]
+	then
+		#affichage des n premières tâches non validées
+		num="${1:1}"
+		vide=1
+		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ]
+		then
+			for ((i=1;i<=taille && num>0;i++))
+			do
+				if [ "${valid[$i]}" -eq '0' ]
+				then
+					echo "#$i ${taches[$i]}"
+					(( num-- ))
+					(( vide = 0 ))
+				fi
+			done
+		fi
+		if [ "$vide" -eq 1 ]
+		then
+			echo 'n_n'
 		fi
 	#--
 	elif [ "${1:0:1}" == 'e' ]

@@ -39,7 +39,11 @@ then
 	exit 0
 elif [ "$1" == '--time' ] || [ "$1" == '-t' ]
 then
-	TZ=UTC date --date="@${span}" '+[%H:%M:%S]'
+	days="$(( span / 86400 ))"
+	hours="$(( (span - days*86400) / 3600 ))"
+	minutes="$(( (span - days*86400 - hours*3600) / 60 ))"
+	seconds="$(( span % 60 ))"
+	printf "[%dd %02d:%02d:%02d]\n" "${days}" "${hours}" "${minutes}" "${seconds}"
 	exit 0
 elif [ "$1" == '--params' ] || [ "$1" == '-p' ]
 then
@@ -65,4 +69,4 @@ fi
 exit 0
 
 ###### Date de dernier appel
-1543840093
+1548777197

@@ -4,7 +4,7 @@
 # time
 xrootname="$(hf -c)"
 
-# date and uptime in days
+# date and uptime in hours
 jours=( "di" "lu" "ma" "me" "je" "ve" "sa" )
 xrootname+=" ${jours[$(date '+%w')]}$(date '+%d%m%y')"
 xrootname+="/$(bc <<< "($(date '+%s') - $(date -d "$(uptime -s)" '+%s')) / 3600")"
@@ -21,20 +21,26 @@ fi
 # cpu load
 xrootname+=" l$(cat /proc/loadavg | cut -d' ' -f2)"
 
-# cpu temperature
-xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
-
 # sound volume
 xrootname+=" v$(soundvol)"
+
+# Backlight
+#xrootname+=" b$(xbacklight -get | cut -d'.' -f1)"
 
 # aquarium
 xrootname+=" $(aquarium -s) $(aquarium -t)"
 
-# display this
-echo " ${xrootname} "
+# my age in days
+xrootname+=" $(bc -l <<< "scale=2; ($(date +%s) - $(date --date='1995-10-15' +%s)) / 86400")"
 
 # Kraken BTC-EUR
-#xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]' | colrm 1 1 | colrm 5)"
+xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]|tonumber')"
 
-# Backlight
-#xrootname+=" b$(xbacklight -get | cut -d'.' -f1)"
+# todo
+xrootname+=" | $(li t r1) $(li t p)"
+
+# cpu temperature
+#xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
+
+# display this
+echo " ${xrootname} "

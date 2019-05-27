@@ -2,7 +2,36 @@
 dims="$(xrandr -q | grep -oe 'current [[:digit:]]\+ x [[:digit:]]\+' | sed 's/current //;s/ x /x/')"
 w="$(cut -d'x' -f1 <<< "$dims")"
 h="$(cut -d'x' -f2 <<< "$dims")"
-iw="$((w/150))"
-ih="$((h/150))"
 
-head -c "$((3*iw*ih))" /dev/urandom | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size "${iw}x${ih}" RGB:-
+if [ -n "$1" ] && [ "$1" == '-f' ]
+then
+	iw="$((w/150))"
+	ih="$((h/150))"
+	head -c "$((3*iw*ih))" /dev/urandom | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size "${iw}x${ih}" RGB:-
+else
+	pct="$(bc <<< "$(date +%H)*4 + $(date +%M)/15 + 1")"
+	{
+		for ((i=0; i<pct; i++))
+		do
+			if ((i%4 == 0))
+			then
+				echo -en "\x80\x80\x80"
+			else
+				echo -en "\xff\xff\xff"
+			fi
+		done
+		for ((i=pct+1; i<=96; i++))
+		do
+			echo -en "\0\0\0"
+		done
+		for i in {0..3}
+		do
+			echo -en "\x40\0\x80\x80\0\xff\x80\0\xff\x80\0\xff" # violet
+			echo -en "\0\0\x80\0\0\xff\0\0\xff\0\0\xff" # blue
+			echo -en "\0\x80\0\0\xff\0\0\xff\0\0\xff\0" # green
+			echo -en "\x80\x80\0\xff\xff\0\xff\xff\0\xff\xff\0" # yellow
+			echo -en "\x80\x40\0\xff\x80\0\xff\x80\0\xff\x80\0" # orange
+			echo -en "\x80\0\0\xff\0\0\xff\0\0\xff\0\0" # red
+		done
+	} | display -backdrop -window root -sample "${w}x${h}" -depth 8 -size '96x2' RGB:-
+fi
