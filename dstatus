@@ -27,20 +27,20 @@ xrootname+=" v$(soundvol)"
 # Backlight
 #xrootname+=" b$(xbacklight -get | cut -d'.' -f1)"
 
+# cpu temperature
+#xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
+
 # aquarium
 xrootname+=" $(aquarium -s) $(aquarium -t)"
 
 # my age in days
-xrootname+=" $(bc -l <<< "scale=2; ($(date +%s) - $(date --date='1995-10-15' +%s)) / 86400")"
+#xrootname+=" $(bc -l <<< "scale=2; ($(date +%s) - $(date --date='1995-10-15' +%s)) / 86400")"
 
 # Kraken BTC-EUR
-xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]|tonumber')"
+#xrootname+=" x$(curl 'https://api.kraken.com/0/public/Ticker?pair=xbteur' 2> /dev/null | jq '.result.XXBTZEUR.c[0]|tonumber')"
 
 # todo
-xrootname+=" | $(li t r1) $(li t p)"
-
-# cpu temperature
-#xrootname+=" c$(acpi -V | grep 'degrees' | head -n 1 | egrep -o '[[:digit:]]+.[[:digit:]]')"
+xrootname+=" | $(li t r1) ($(li t r | wc -l))"
 
 # display this
 echo " ${xrootname} "

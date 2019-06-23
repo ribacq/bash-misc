@@ -238,6 +238,7 @@ then
 elif [ -f "${used_dir}/$1" ] && [ ! "${1:0:1}" == '.' ]
 then
 	#utilisation d'une liste existante
+	change=0
 	nom=$1
 	shift
 	exec 3<> "${used_dir}/$nom"
@@ -266,6 +267,7 @@ then
 	if [ "$1" == 't' ]
 	then
 		#édition du titre de la liste
+		change=1
 		read -p 'Entrez le titre : ' -ei "${titre}" titre
 	#--
 	elif [ "${1:0:1}" == '+' ]
@@ -275,6 +277,7 @@ then
 		tache="${tache:1}"
 		if [ -n "$tache" ]
 		then
+			change=1
 			(( taille++ ))
 			taches[$taille]="$tache"
 			valid[$taille]=0
@@ -289,6 +292,7 @@ then
 		num="${1:1}"
 		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
 		then
+			change=1
 			echo "Suppression de '${taches[$num]}'."
 			taches[$num]=''
 		else
@@ -301,6 +305,7 @@ then
 		num="${1:1}"
 		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
 		then
+			change=1
 			if [ "${valid[$num]}" -eq 1 ]
 			then
 				valid[$num]=0
@@ -315,26 +320,29 @@ then
 	#--
 	elif [ "$1" == 'p' ]
 	then
-		#stats
+		#progrès
 		echo "($((taille-nb_valid))/$nb_valid/$taille)"
 	#--
 	elif [ "${1:0:1}" == 'r' ]
 	then
 		#affichage des n premières tâches non validées
 		num="${1:1}"
-		vide=1
 		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ]
 		then
-			for ((i=1;i<=taille && num>0;i++))
-			do
-				if [ "${valid[$i]}" -eq '0' ]
-				then
-					echo "#$i ${taches[$i]}"
-					(( num-- ))
-					(( vide = 0 ))
-				fi
-			done
+			:
+		else
+			((num=taille+1))
 		fi
+		vide=1
+		for ((i=1;i<=taille && num>0;i++))
+		do
+			if [ "${valid[$i]}" -eq '0' ]
+			then
+				echo "#$i ${taches[$i]}"
+				(( num-- ))
+				(( vide = 0 ))
+			fi
+		done
 		if [ "$vide" -eq 1 ]
 		then
 			echo 'n_n'
@@ -346,6 +354,7 @@ then
 		num="${1:1}"
 		if [ "$num" -eq "$num" ] 2>/dev/null && [ "$num" -ge 1 ] && [ "$num" -le $taille ]
 		then
+			change=1
 			echo "Édition de la tâche numéro $num :"
 			read -eri "${taches[$num]}" taches[$num]
 		else
@@ -371,6 +380,7 @@ then
 			do
 				if [ "$signe" == '-' -a "$num" -gt 1 ] || [ "$signe" == '+' -a "$num" -lt "$taille" ]
 				then
+					change=1
 					tmp_tache="${taches[$(bc <<< "${num}${signe}1")]}"
 					tmp_valid="${valid[$(bc <<< "${num}${signe}1")]}"
 					taches[$(bc <<< "${num}${signe}1")]="${taches[$num]}"
@@ -411,19 +421,22 @@ then
 	fi
 	
 	#enregistrement de la liste
-	fich="${used_dir}/$nom"
-	echo "$titre" > "$fich"
-	for i in `seq 1 $taille`
-	do
-		if [ -n "${taches[$i]}" ]
-		then
-			if [ "${valid[$i]}" -eq 1 ]
+	if [ "$change" -eq 1 ]
+	then
+		fich="${used_dir}/$nom"
+		echo "$titre" > "$fich"
+		for i in `seq 1 $taille`
+		do
+			if [ -n "${taches[$i]}" ]
 			then
-				echo -n '~~' >> "$fich"
+				if [ "${valid[$i]}" -eq 1 ]
+				then
+					echo -n '~~' >> "$fich"
+				fi
+				echo "${taches[$i]}" >> "$fich"
 			fi
-			echo "${taches[$i]}" >> "$fich"
-		fi
-	done
+		done
+	fi
 #--
 else
 	echo "Erreur : Liste '$1' inexistante. Faites 'li -h' pour l'aide."
