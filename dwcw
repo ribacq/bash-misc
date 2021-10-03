@@ -1,0 +1,31 @@
+#!/bin/bash
+# dwcw: word count diff
+# Written by Quentin RIBAC (2021)
+# This is free software.
+# See LICENSE file for legal information.
+# Usage: dwcw [-v] [path]
+# -v: verbose, shows +additions -deletions +/-total, default is only +/-total
+# path: passed to git diff
+
+verbose=false
+path='.'
+if [ "$1" == '-v' ]; then
+	verbose=true
+	shift
+fi
+if [ -f "$1" ] || [ -d "$1" ]; then
+	path="$1"
+fi
+wordDiff="$(git diff --word-diff=plain "${path}")"
+additions="$(echo "${wordDiff}" | grep -oP '{\+[^}]+\+}' | wc -w)"
+deletions="$(echo "${wordDiff}" | grep -oP '\[-[^\]]+-\]' | wc -w)"
+(( total = additions - deletions ))
+if [ "$total" -ge 0 ]; then
+	total="+${total}"
+fi
+
+if [ "$verbose" == 'true' ]; then
+	echo "+${additions} -${deletions} ${total}"
+else
+	echo "${total}"
+fi
