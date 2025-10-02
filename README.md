@@ -21,3 +21,11 @@ A snake game. The controls are simple: `t` to turn to your left, `n` to turn to 
 ## li
 A simple list management tool. Try `li --help` for more information on usage.
 
+## gct
+Git Commit Time calculator.
+Expected commit format: `prefix Thh:mm message`
+Example usage:
+
+- `gct` -> duration since latest commit
+- `gct -d` -> compound time for the day
+- `gct -s` -> compound time since last monday`
