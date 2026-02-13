@@ -1,10 +1,11 @@
 #!/bin/bash
 
 if [ "$1" == '-h' ]; then
-	echo 'gct [-u username|-a]              time since latest commit'
-	echo 'gct [-u username|-a] -d [date]    cumulated commit time on specified date (defaults to today)'
-	echo 'gct [-u username|-a] -s [date]    cumulated commit time since specified date (defaults to today - 7 days)'
-	echo 'gct [-u username|-a] prefix       cumulated commit time for commits with specified prefix'
+	echo 'gct [-u username|-a]                   time since latest commit'
+	echo 'gct [-u username|-a] -d [date]         cumulated commit time on specified date (defaults to today)'
+	echo 'gct [-u username|-a] -s [-v] [date]    cumulated commit time since specified date (defaults to today - 7 days)'
+	echo '                                       with -v, prints details for each day'
+	echo 'gct [-u username|-a] prefix            cumulated commit time for commits with specified prefix'
 	echo
 	echo '-u username: only commits from "username", the email prefix (part before the @)'
 	echo '-a: commits by all users'
@@ -50,16 +51,34 @@ if [ "$1" == '-d' ]; then
 	echo "${commits}"
 	echo
 	commits="$(echo -n "${commits}" | cut -d' ' -f3)"
-elif [ "$1" == '-s' ]; then
+elif [ "$1" == '-s' ] || [ "$1" == '-sv' ]; then
+	verbose=''
+	[ "$1" == '-sv' ] && verbose='1'
 	shift
-	s="$(date -Isec --date='last monday')"
-	[ -n "$*" ] && s="$(date -Isec --date="$*")"
-	echo "=== commits since $s ==="
-	commits="$(git log --branches=* --pretty=format:'%s <%al>' --no-color --since="$s" | grep -vi 'Merge')"
+	[ "$1" == '-v' ] && verbose='1' && shift
+
+	sinceInput='last monday'
+	[ -n "$*" ] && sinceInput="$*"
+	s="$(date -Isec --date="$sinceInput")"
+
+	echo "=== commits since $sinceInput ==="
+	commits="$(git log --branches=* --pretty=format:'%aI %s <%al>' --no-color --since="$s" | grep -vi 'Merge')"
 	if [ -n "$user_email_prefix" ]; then
 		commits="$(echo "$commits" | grep "<${user_email_prefix}>")"
 	fi
-	commits="$(echo -n "${commits}" | cut -d' ' -f2)"
+
+	if [ -n "$verbose" ]; then
+		days="$(echo -n "$commits" | grep -o -P '\d{4}-\d{2}-\d{2}T' | tr -d T | sort | uniq )"
+		echo
+		for day in $days
+		do
+			sum="$(echo -n "$commits" | grep "$day" | grep -o -P ' T\d{2}:\d{2}' | tr -d 'T ' | tr '\n' +)"
+			echo "$(date --date="${day}" +%a) ${day}: $(qalc -t "(${sum}) hours" | tr -d + | tr -s ' ')"
+		done
+		echo
+	fi
+
+	commits="$(echo -n "${commits}" | cut -d' ' -f3)"
 else
 	prefix=$1
 	commits="$(git log --branches=* --pretty=format:'%s <%al>' --no-color | grep -P "^${prefix} T\d{2}:\d{2}\b")"
