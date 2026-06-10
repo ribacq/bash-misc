@@ -1,0 +1,10 @@
+{
+	"issues": [
+		{
+			"title": "9blanc is cool",
+			"body": "what a nice game",
+			"labels": ["praise"],
+			"assignees": ["ribacq"]
+		}
+	]
+}
